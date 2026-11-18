@@ -381,6 +381,8 @@ def buyer_action(rid: int, gid: str, payload: dict = Body(...), db: Session = De
             if payload.get(k) not in (None, ""):
                 final[k] = payload[k]
         final["decision"] = "PO" if final["route"] in ("CONTRACT_PO", "EMERGENCY_PO", "SPOT_PO") else "SOURCING_REQUEST"
+        if final["decision"] != "PO":
+            final["supplier_id"], final["unit_price"], final["po_id"] = "", None, ""
         sid = final.get("supplier_id")
         if final["decision"] == "PO":
             if not sid:
