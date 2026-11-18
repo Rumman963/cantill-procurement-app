@@ -133,7 +133,23 @@ def latest_policy_row(db: Session) -> PolicyVersion | None:
     return sorted(rows, key=lambda r: (r.effective_date, r.approved_at or datetime.min))[-1] if rows else None
 
 
+def scrub_secrets(db: Session):
+    from .db import Audit
+    from .llm import redact
+    for r in db.query(PolicyVersion).all():
+        ch = [redact(c) for c in (r.changes or [])]
+        if ch != (r.changes or []):
+            r.changes = ch
+        if r.source_text and redact(r.source_text) != r.source_text:
+            r.source_text = redact(r.source_text)
+    for a in db.query(Audit).all():
+        d = json.loads(redact(json.dumps(a.details or {})))
+        if d != (a.details or {}):
+            a.details = d
+
+
 def seed(db: Session):
+    scrub_secrets(db)
     if not db.query(PolicyVersion).count():
         body = json.loads((POLICY_DIR / "policy_v5.0.json").read_text())
         assert not validate_policy(body)

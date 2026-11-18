@@ -58,7 +58,7 @@ def startup():
 @app.get("/api/health")
 def health(db: Session = Depends(get_db)):
     cur = current_policy_row(db, today())
-    return {"ok": True, "data": data_status(db), "llm": llm.provider(), "today": today().isoformat(),
+    return {"ok": True, "app_version": "1.2", "data": data_status(db), "llm": llm.provider(), "today": today().isoformat(),
             "current_policy": cur.version if cur else None}
 
 

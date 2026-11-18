@@ -122,6 +122,7 @@ def test_secrets_are_redacted():
     from app.llm import redact
     s = redact("Client error '404 Not Found' for url 'https://generativelanguage.googleapis.com/v1beta/models/x:generateContent?key=AIzaSyA1234567890abcdefghijklmnop'")
     assert "AIza" not in s and "key=AIza" not in s
+    assert "Ab8RN6" not in redact("token AQ.Ab8RN6JSEOMRDB2-4OGVzkrojCqpGB3ECPnk7hq here")
 
 
 def test_gemini_picks_an_available_model(monkeypatch):

@@ -169,7 +169,7 @@ def rule_based_propose(current: dict, text: str, today: date) -> dict:
             unread.append(sent.strip())
     return {"policy": pol, "llm_changes": notes,
             "assumptions": ([f"Could not read automatically, please apply in the editor: {u}" for u in unread]),
-            "method": "rule-based reader (no LLM key configured)"}
+            "method": "rule-based reader"}
 
 
 def _set_value_condition(cond, new) -> bool:
@@ -217,8 +217,8 @@ def propose(current: dict, text: str, today: date) -> dict:
                 return res
             errors_llm = errs
         except Exception as e:
-            errors_llm = [str(e)]
+            errors_llm = [llm.redact(e)]
     res = rule_based_propose(current, text, today)
     if errors_llm:
-        res["assumptions"].insert(0, f"LLM proposal was rejected ({'; '.join(errors_llm)[:300]}); used rule-based reader")
+        res["assumptions"].insert(0, llm.redact(f"AI reader unavailable or its proposal was invalid ({'; '.join(errors_llm)[:300]}); used rule-based reader"))
     return res
