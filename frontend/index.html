@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Corvo PR-to-PO</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">C</span> Corvo <b>PR&rarr;PO</b></div>
+    <nav id="nav">
+      <a href="#/chat" data-route="chat">Raise request</a>
+      <a href="#/workspace" data-route="workspace">Buyer workspace</a>
+      <a href="#/batch" data-route="batch">Batch &amp; API</a>
+      <a href="#/policy" data-route="policy">Policy</a>
+      <a href="#/contracts" data-route="contracts">Contracts</a>
+      <a href="#/suppliers" data-route="suppliers">Preferred suppliers</a>
+      <a href="#/data" data-route="data">Data</a>
+      <a href="#/audit" data-route="audit">Audit log</a>
+    </nav>
+    <div class="who">
+      <span id="policyBadge" class="pill"></span>
+      <input id="userName" title="Your name (recorded on every action)" placeholder="Your name">
+    </div>
+  </header>
+  <main id="view"></main>
+  <div id="toast" class="toast hidden"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

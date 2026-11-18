@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Optional: mount the unzipped task kit to auto-load master data on first start.
+      KIT_DIR: /kit
+    volumes:
+      - ./data:/app/backend/data
+      - ${KIT_PATH:-./kit}:/kit:ro

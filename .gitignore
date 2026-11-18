@@ -1,0 +1,13 @@
+# task data must not be committed
+kit/
+Cantill_FullStack_Task_Kit/
+*.zip
+data/
+backend/data/
+*.db
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
