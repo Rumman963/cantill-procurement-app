@@ -116,3 +116,35 @@ ID S009) ("the Supplier").
 """)
     assert d["contract_id"] == "RC-2026-099" and d["supplier_id"] == "S009"
     assert d["value_cap"] == 2000000 and d["lines"][0]["rate"] == 3537.76
+
+
+def test_secrets_are_redacted():
+    from app.llm import redact
+    s = redact("Client error '404 Not Found' for url 'https://generativelanguage.googleapis.com/v1beta/models/x:generateContent?key=AIzaSyA1234567890abcdefghijklmnop'")
+    assert "AIza" not in s and "key=AIza" not in s
+
+
+def test_gemini_picks_an_available_model(monkeypatch):
+    import httpx
+    from app import llm
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_MODEL", raising=False)
+    monkeypatch.setattr(llm, "_gemini_models", None)
+    req = httpx.Request("GET", "https://x")
+    listing = {"models": [
+        {"name": "models/gemini-2.5-pro", "supportedGenerationMethods": ["generateContent"]},
+        {"name": "models/gemini-3.0-flash", "supportedGenerationMethods": ["generateContent"]},
+        {"name": "models/gemini-3.0-flash-image", "supportedGenerationMethods": ["generateContent"]},
+        {"name": "models/text-embedding-004", "supportedGenerationMethods": ["embedContent"]}]}
+    calls = []
+    monkeypatch.setattr(httpx, "get", lambda *a, **k: httpx.Response(200, json=listing, request=req))
+
+    def post(url, **k):
+        calls.append(url)
+        assert "key=" not in url
+        return httpx.Response(200, json={"candidates": [{"content": {"parts": [{"text": "hi"}]}}]}, request=req)
+    monkeypatch.setattr(httpx, "post", post)
+    assert llm.complete("s", "u") == "hi"
+    assert "gemini-3.0-flash:generateContent" in calls[0]

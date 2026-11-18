@@ -124,4 +124,4 @@ def test_llm_amendment_path_is_validated(monkeypatch):
     bad["rules"][0]["when"] = {"all": [{"fact": "made_up_fact", "op": "eq", "value": 1}]}
     monkeypatch.setattr(llm, "complete", lambda *a, **k: json.dumps({"version": "5.1", "effective_date": "2026-11-05", "policy": bad}))
     res2 = policy_service.propose(v5, "Version 5.1 effective from 2026-11-05.", date(2026, 11, 18))
-    assert res2["method"].startswith("rule-based") and "rejected" in res2["assumptions"][0]
+    assert res2["method"].startswith("rule-based") and "invalid" in res2["assumptions"][0]
