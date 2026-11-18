@@ -315,7 +315,7 @@ async function readAmendment() {
   const fd = new FormData(); const f = $("#amFile").files[0];
   if (f) fd.append("file", f); fd.append("text", $("#amText").value);
   if (!f && !$("#amText").value.trim()) return toast("Upload a document or describe the change", true);
-  $("#amOut").innerHTML = `<p class="muted">Reading the amendment…</p>`;
+  $("#amOut").innerHTML = `<p class="muted">Reading the amendment… with AI this can take up to a minute.</p>`;
   try {
     const r = await api("/api/policies/amend", { method: "POST", body: fd });
     $("#amOut").innerHTML = `<p class="small muted">Read with: ${esc(r.method)}</p>`;

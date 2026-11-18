@@ -10,6 +10,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from fastapi import Body, Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -58,8 +59,13 @@ def startup():
 @app.get("/api/health")
 def health(db: Session = Depends(get_db)):
     cur = current_policy_row(db, today())
-    return {"ok": True, "app_version": "1.2", "data": data_status(db), "llm": llm.provider(), "today": today().isoformat(),
+    return {"ok": True, "app_version": "1.3", "data": data_status(db), "llm": llm.provider(), "today": today().isoformat(),
             "current_policy": cur.version if cur else None}
+
+
+@app.get("/api/llm/check")
+async def llm_check():
+    return await run_in_threadpool(llm.check)
 
 
 @app.post("/api/data/upload")
@@ -128,7 +134,7 @@ async def extract_pdf(file: UploadFile = File(...)):
     if (d["warnings"]) and llm.available():
         try:
             txt = pdf_text(raw)
-            ex = llm.extract_json(llm.complete(
+            ex = llm.extract_json(await run_in_threadpool(llm.complete,
                 "Extract the rate contract. Return ONLY JSON: {contract_id, supplier_id, supplier_name, start_date (YYYY-MM-DD), "
                 "end_date, value_cap (number INR), lines:[{item_code, description, uom, rate}]}. Do not invent values.", txt, 1500))
             for k, v in ex.items():
@@ -220,7 +226,7 @@ async def amend(text: str = Form(""), file: UploadFile | None = File(None), db: 
     if not content.strip():
         raise HTTPException(400, "Provide amendment text or a document")
     base = latest_policy_row(db)
-    res = policy_service.propose(copy.deepcopy(base.body), content, today())
+    res = await run_in_threadpool(policy_service.propose, copy.deepcopy(base.body), content, today())
     body = res["policy"]
     try:
         r = _make_draft(db, body, base, "document" if file else "chat", content[:20000], actor,

@@ -118,7 +118,7 @@ def test_llm_amendment_path_is_validated(monkeypatch):
     monkeypatch.setattr(llm, "provider", lambda: "fake")
     monkeypatch.setattr(llm, "complete", lambda *a, **k: fake)
     res = policy_service.propose(v5, "From 5 Nov, spot POs at Chakan only below 1 lakh. Version 5.1", date(2026, 11, 18))
-    assert res["policy"]["version"] == "5.1" and res["method"].startswith("LLM")
+    assert res["policy"]["version"] == "5.1" and res["method"].startswith("AI reader")
     assert any("NEW rule [5.4a]" in x for x in diff_policies(v5, res["policy"]))
     bad = copy.deepcopy(proposed)
     bad["rules"][0]["when"] = {"all": [{"fact": "made_up_fact", "op": "eq", "value": 1}]}

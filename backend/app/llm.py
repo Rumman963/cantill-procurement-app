@@ -8,6 +8,7 @@ import httpx
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 _gemini_models: list[str] | None = None
+last_model: str | None = None
 
 
 class LLMError(RuntimeError):
@@ -72,8 +73,9 @@ def _gemini(system: str, user: str, max_tokens: int, timeout: float) -> str:
     models = ([wanted] if wanted else []) + [m for m in _gemini_candidates(key, 20) if m != wanted]
     if not models:
         models = ["gemini-2.5-flash", "gemini-flash-latest"]
+    global last_model
     last = None
-    for model in models:
+    for model in models[:3]:
         try:
             r = httpx.post(f"{GEMINI_BASE}/models/{model}:generateContent", headers={"x-goog-api-key": key},
                            timeout=timeout, json={
@@ -89,7 +91,8 @@ def _gemini(system: str, user: str, max_tokens: int, timeout: float) -> str:
         if r.status_code >= 400:
             raise LLMError(f"Gemini {model} returned HTTP {r.status_code}")
         parts = (r.json().get("candidates") or [{}])[0].get("content", {}).get("parts", [])
-        return "".join(p.get("text", "") for p in parts)
+        last_model = model
+        return "".join(p.get("text", "") for p in parts if not p.get("thought"))
     raise LLMError(f"No Gemini model worked ({last})")
 
 
@@ -121,6 +124,21 @@ def complete(system: str, user: str, max_tokens: int = 4000, timeout: float = 90
     except Exception as e:
         raise LLMError(redact(f"{p} call failed: {type(e).__name__}"))
     raise LLMError("No LLM provider configured")
+
+
+def check() -> dict:
+    import time
+    p = provider()
+    if not p:
+        return {"ok": False, "provider": None, "error": "No AI key configured"}
+    t0 = time.time()
+    try:
+        out = complete("Reply with the single word OK.", "ping", max_tokens=200, timeout=60)
+        return {"ok": True, "provider": p, "model": last_model, "seconds": round(time.time() - t0, 1),
+                "reply": out.strip()[:40], "candidates": _gemini_models}
+    except Exception as e:
+        return {"ok": False, "provider": p, "seconds": round(time.time() - t0, 1), "error": redact(e),
+                "candidates": _gemini_models}
 
 
 def extract_json(text: str):

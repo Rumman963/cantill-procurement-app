@@ -99,13 +99,13 @@ Rules for editing:
 def llm_propose(current: dict, text: str, today: date) -> dict:
     sys = SYSTEM.replace("FACTS", json.dumps(FACTS_DOC)).replace("OPS", json.dumps(OPS)).replace(
         "ROUTES", json.dumps(ROUTES)).replace("TODAY", today.isoformat())
-    out = llm.complete(sys, f"CURRENT POLICY:\n{json.dumps(current, indent=1)}\n\nAMENDMENT:\n{text}", max_tokens=8000)
+    out = llm.complete(sys, f"CURRENT POLICY:\n{json.dumps(current)}\n\nAMENDMENT:\n{text}", max_tokens=16000, timeout=150)
     data = llm.extract_json(out)
     pol = data.get("policy") or {}
     pol["version"] = str(data.get("version") or pol.get("version"))
     pol["effective_date"] = data.get("effective_date") or pol.get("effective_date")
     return {"policy": pol, "llm_changes": data.get("changes") or [], "assumptions": data.get("assumptions") or [],
-            "method": f"LLM ({llm.provider()})"}
+            "method": f"AI reader ({llm.provider()} {llm.last_model or ''})".strip()}
 
 
 def parse_inr(s: str) -> float | None:
