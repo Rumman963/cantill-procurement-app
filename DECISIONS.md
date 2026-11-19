@@ -113,3 +113,13 @@ Ties are broken by most recent PO, then supplier id.
 
 - Values and prices are output with 2 decimals, unrounded beyond that. The worked examples show rounded rupees (₹1,37,531 = 15 × 9,168.71 = 1,37,530.65).
 - `NOT_PROCESSED` rows have `decision = NOT_PROCESSED`, `route = NOT_PROCESSED`, and the reason in `reason`.
+
+## K. Blind test notes (19 Nov 2026)
+
+- **Run 1:** `hidden_pr_batch.csv` processed with policy v5.0 forced (`policy_version=5.0`). 190 lines → 153 requirements. PR-26-00674 (quantity 0) and PR-26-00675 (plant PUN2) are `NOT_PROCESSED`.
+- **Amendment No. 1 (v5.1, effective 2026-12-01)** was entered through the app's policy editor, reviewed in "What will change", and approved. The AI reader could not be used: Gemini returned HTTP 503 and then timed out. How each change was recorded:
+  - **A1:** rule 5.4 now reads (not Packaging AND value < ₹2,00,000) OR (Packaging AND value < ₹1,00,000), with purchase history. Packaging at or above ₹1 lakh falls through to sourcing. Emergency rule 5.3 is unchanged, because A1 names only rule 5.4.
+  - **A2:** rule 5.5 is RFQ below ₹8,00,000. Rule 5.6 (RFP) catches ₹8,00,000 and above.
+  - **A3:** new rules 5.2A / 5.2A-RFP sit immediately after 5.2. At CHK1, Electrical Spares worth ₹50,000 or more go to RFQ (below ₹8 lakh) or RFP (₹8 lakh and above). Contract POs under 5.2 are still checked first, as the amendment allows.
+- **Run 2:** same batch, effective-dated. Requirements dated before 1 Dec stay on v5.0 (90 lines); from 1 Dec they use v5.1 (98 lines). 19 lines change: 15 Packaging and CHK1 Electrical spot POs move to RFQ, and 4 RFQs between ₹8 and 10 lakh move to RFP.
+- **Preferred lists:** exported as of 2026-12-01 (top 3 per item).
